@@ -23,6 +23,8 @@ function website(){
 		//wait_reply();
 		$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p><b>'+chatbot_name+':</b></p><p>'+self.refreshSearch()+'</p></div><div>');
 		$('#chatbot_input').val('');
+		var objDiv = document.getElementById("chatbot_textarea");
+		objDiv.scrollTop = objDiv.scrollHeight;
 	}
 	
 	function get_title_knowledgeBase(){		
