@@ -1,2 +1,2 @@
 # chatbot
-javascript chatbot
+javascript chatbot (machine learning)
