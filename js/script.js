@@ -10,21 +10,38 @@ function website(){
 	
 	this.ready = function(){
 		footer_time();
-		var titles = get_title_knowledgeBase();
+		titles = get_title_knowledgeBase();
 		
-		$('body').off('click').on('click', '#chatbot_button', function () {
+		$('body').off('click', '#chatbot_button').on('click', '#chatbot_button', function () {
 			var text = $('#chatbot_input').val();
 			self.chat_send_text(text);
 		});
+		
+		window.addEventListener('keydown', (e) => {
+			if(e.keyCode == 13){
+				var text = $('#chatbot_input').val();
+				self.chat_send_text(text);
+			}			
+		})	
+
+		$('body').off('click', '.chatbot_button_options').on('click', '.chatbot_button_options', function () {
+			var option = $(this).attr('option').replace(/_/g, ' ')
+			//console.log('chatbot_button_options', option);
+			$(".chatbot_input").prop('disabled', false);  
+			$("#chatbot_button").prop('disabled', false); 
+			wait_reply(3).then(function(data) {			
+				write_reply(option);
+			});	
+		});
 	}
 	
-	this.chat_send_text = function(text){		
+	this.chat_send_text = function(text){	
+		$('input').blur();	
 		$('#chatbot_textarea').append('<div class="text_chat"><div class="text_me"><p><b>Me:</b></p><p>'+text+'</p></div><div>');
-		//wait_reply();
-		$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p><b>'+chatbot_name+':</b></p><p>'+self.refreshSearch()+'</p></div><div>');
-		$('#chatbot_input').val('');
-		var objDiv = document.getElementById("chatbot_textarea");
-		objDiv.scrollTop = objDiv.scrollHeight;
+		var search = $('#chatbot_input').val();	
+		wait_reply(6).then(function(data) {			
+			write_reply(search);
+		});	
 	}
 	
 	function get_title_knowledgeBase(){		
@@ -75,8 +92,7 @@ function website(){
 		return 0;
 	}
 	
-	this.refreshSearch = function(){
-		var search = $('#chatbot_input').val();	
+	this.refreshSearch = function(search){
 		var title = "";
 		var results = [];
 		var myresult_title = "";
@@ -103,43 +119,88 @@ function website(){
 			
 			//console.warn("myresult_answer", results, myresult_answers, myresult_answer);
 		} else {
-			myresult_answer = "I don't know what to say.";
+			myresult_answer = "I don't understand.";
 		}
 		
 		return myresult_answer;
 	}
 	
-	function wait_reply(){
-		if($('#wait_reply').length > 0){
-			$('#wait_reply').remove();
-		}
-		
-		$('#chatbot_textarea').append('<p id="wait"></p>');
-		
-		var i = 0;
-		var j = 0;
-		var Wait = setInterval(function() {
-			i = ++i % 4;											
-			$("#wait").html("Wait"+Array(i+1).join("."));
+	function wait_reply(x){
+		return new Promise(function(resolve, reject){			
+			$('#chatbot_textarea').append('<div id="wait_container" class="text_chat"><div class="text_oana"><p><b>Oana:</b></p><p id="wait"></p></div></div>');
 			
-			j++	
-			if(j > 6){
-				clearInterval(Wait);
+			var i = 0;
+			var j = 0;
+			var Wait = setInterval(function() {
+				i = ++i % 4;											
+				$("#wait").html("Wait"+Array(i+1).join("."));
 				
-				if($('.error_reply').length == 0){
-					//console.warn('error_reply1', $('.error_reply').length);
-					$("#wait").html("'+chatbot_name+': Error, please try again.");
-					$("#wait").attr('class', 'error_reply');
-					$("#wait").attr('id', '');
-				} else {
-					//console.warn('error_reply2', $('.error_reply').length);					
-					$("#wait").attr('class', 'error_reply');
-					$("#wait").attr('id', '');
-					$(".error_reply").last().html("'+chatbot_name+': Hmm... Try other words.");
+				j++	
+				if(j > x){
+					clearInterval(Wait);					
+					$("#wait_container").remove();
+					resolve(true);
 				}
-				
+			}, 500);
+		});	
+	}
+
+	function write_reply(search){
+		return new Promise(function(resolve, reject){			
+			var chatbot_text = self.refreshSearch(search)
+			var text_list_found = chatbot_text.includes("//");
+			if(text_list_found){
+				var text_list = chatbot_text.split('//')
+				for(var i in text_list){
+					if(i == 0){	
+						$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p><b>'+chatbot_name+':</b></p><p>'+text_list[i]+'</p></div><div>');	
+					} else {
+						$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p>'+text_list[i]+'</p></div><div>');
+					}					
+				}
+				check_special = text_list[text_list.length-1];
+			} else {						
+				$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p><b>'+chatbot_name+':</b></p><p>'+chatbot_text+'</p></div><div>');
+				check_special = chatbot_text;
+			}	
+			
+			$('#chatbot_input').val('');
+
+			if(typeof check_special != "undefined"){
+				self.check_special_questions(check_special);
+			}			
+			
+			var objDiv = document.getElementById("chatbot_textarea");
+			objDiv.scrollTop = objDiv.scrollHeight;
+			
+			resolve(true);
+		});
+	}
+
+	this.check_special_questions = function(question){
+		var trigger_found = false;
+		var trigger = "";
+		for(var i in trigger_data){
+			trigger_found = question.toLowerCase().includes(trigger_data[i].toLowerCase());
+			//console.log(question, question.toLowerCase(), trigger_data[i], trigger_found);
+			if(trigger_found){
+				trigger = trigger_data[i];
+				break;
 			}
-		}, 500);
+		}		
+		
+		if(trigger_found){
+			//console.log(question, trigger);
+			var chat_options = "";
+			switch (trigger) {
+				case "Would you like to know more about me and what I do?":
+					chat_options = "<div option='talk_overview_yes' class='chatbot_button_options'>Yes</div><div option='talk_overview_no' class='chatbot_button_options'>No</div>"
+					$(".chatbot_input").prop('disabled', true); 
+					$("#chatbot_button").prop('disabled', true); 
+					break;				
+			  }
+			$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p><b>'+chatbot_name+':</b></p><p>'+chat_options+'</p></div><div>');
+		} 
 	}
 	
 	function footer_time(){

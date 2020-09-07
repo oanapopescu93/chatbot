@@ -103,21 +103,24 @@ h6 {
 	padding:5px 10px;
 	border-radius:5px;
 	display:inline-block;
-	margin-bottom:5px;
+    margin-bottom:5px;
+    min-width:100px;
 }
 
-.chatbot_textarea .text_oana{
+.chatbot_textarea .text_oana, .chatbot_textarea #wait{
 	float:right;
-	text-align:right
+	text-align:right;
 }
 
-.chatbot_button{
+.chatbot_button, .chatbot_button_options{
 	width:100%;
 	border: solid 1px #123043;
 	border-radius:20px;
 	color:white;
 	background: #123043;
-	padding:5px 10px;
+    padding:5px 10px;
+    margin-bottom:5px;
+    text-align: center;
 }
 
 .chatbot_input{
@@ -127,6 +130,12 @@ h6 {
 	color:#123043;
 	background: white;
 	padding:5px 10px;
+}
+
+#wait{
+    width: 60px;
+    text-align: left!important;
+    float: right!important;
 }
 
 footer{
