@@ -123,6 +123,18 @@ h6 {
     text-align: center;
 }
 
+a.chatbot_button, a.chatbot_button:hover, a.chatbot_button:focus{
+	width:100%;
+	border: solid 1px #123043;
+	border-radius:20px;
+	color:white;
+	background: #123043;
+    padding:5px 10px;
+    margin-bottom:5px;
+    text-align: center;
+	text-decoration: none;
+}
+
 .chatbot_input{
 	width:100%;
 	border: solid 1px #5d8ea7;
