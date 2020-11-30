@@ -2,11 +2,11 @@ var current_company = "Idrive Global";
 var today = new Date();
 var experience = today.getFullYear() - 2017 + 1
 var oana_info = {
-	phone: "(+40)729.699.148",
+	phone: "0729.699.148",
 	email: "oanapopescu93@gmail.com",
 	location: "Romania, Bucharest",
 	git: "https://github.com/oanapopescu93",
-	linkedin: "https://www.linkedin.com/in/oanapopescu93/"
+	linkedin: "https://www.linkedin.com/in/oanapopescu93"
 }
 
 
@@ -117,7 +117,7 @@ var knowledgeBase = [
 	
 	[
 		["I need help, I need your help, I want help, I want your help"], 
-		["Ok... Please go speak to the real Oana. Phone number - " + oana_info.phone]
+		["Ok... Please go speak to the real Oana. Phone number - <a target='_top' href='tel:+40729699148'>" + oana_info.phone + "</a>"]
 	],
 
 	[
@@ -133,7 +133,7 @@ var knowledgeBase = [
 	[
 		["Talk overview yes"], 
 		[
-			"I am a Frontend/Javascript developer with "+experience+" years experience.///I know Javascript, React/Redux and HTML Canvas.///I am learning NodeJS.//Now, she's working as a Javascript dev at "+current_company+".///My git--> "+oana_info.git+"Would you like to contact me?"
+			"I am a Frontend/Javascript developer with "+experience+" years experience.///I know Javascript, React/Redux and HTML Canvas.///I am learning NodeJS.//Now, she's working as a Javascript dev at "+current_company+".///My git is <a target='_blank' href='"+oana_info.git+"'>"+oana_info.git+"</a>///Would you like to contact me?"
 		]
 	],
 	[
@@ -144,7 +144,7 @@ var knowledgeBase = [
 	[
 		["Talk contact yes"], 
 		[
-			"Phone> " + oana_info.phone + "///Email " + oana_info.email + "Linkedin " + oana_info.linkedin + "///Please contact me via phone///I responde very slowly on mail or linkedin."
+			"Phone <a target='_top' href='tel:+40729699148'>" + oana_info.phone + "</a>///Email <a target='_top' href='mailto:" + oana_info.email + "'>" + oana_info.email + "</a>///Linkedin <a target='_blank' href='" + oana_info.linkedin + "'>" + oana_info.linkedin + "</a>///Please contact me via phone///I responde very slowly on mail or linkedin"
 		]
 	],
 	[
