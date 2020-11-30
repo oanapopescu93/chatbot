@@ -133,7 +133,7 @@ h6 {
 }
 
 #wait{
-    width: 60px;
+    width: 100%;
     text-align: left!important;
     float: right!important;
 }
@@ -146,6 +146,10 @@ footer{
 	left:0px;
 	right:0px;
 	padding:10px 0px;
+}
+
+a, a:hover, a:focus{
+	color:#123043;
 }
 
 /*---------------------media---------------------*/
