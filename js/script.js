@@ -7,6 +7,7 @@ function website(){
 	var self = this;	
 	var chatbot_name = "Oana";
 	var titles = [];
+	var errors = 0
 	
 	this.ready = function(){
 		footer_time();
@@ -14,33 +15,38 @@ function website(){
 		
 		$('body').off('click', '#chatbot_button').on('click', '#chatbot_button', function () {
 			var text = $('#chatbot_input').val();
+			$(".chatbot_input").prop('disabled', true);  
+			$("#chatbot_button").prop('disabled', true); 
 			self.chat_send_text(text);
 		});
 		
 		window.addEventListener('keydown', (e) => {
 			if(e.keyCode == 13){
 				var text = $('#chatbot_input').val();
+				$(".chatbot_input").prop('disabled', true);  
+				$("#chatbot_button").prop('disabled', true); 
 				self.chat_send_text(text);
 			}			
 		})	
 
 		$('body').off('click', '.chatbot_button_options').on('click', '.chatbot_button_options', function () {
 			var option = $(this).attr('option').replace(/_/g, ' ')
+			var search_word = $(this).attr('result');			
 			//console.log('chatbot_button_options', option);
 			$(".chatbot_input").prop('disabled', false);  
 			$("#chatbot_button").prop('disabled', false); 
 			wait_reply(3).then(function(data) {			
-				write_reply(option);
+				write_reply(option, search_word);
 			});	
 		});
 	}
 	
 	this.chat_send_text = function(text){	
-		$('input').blur();	
+		$('input').blur();
+		$('#chatbot_input').val('');
 		$('#chatbot_textarea').append('<div class="text_chat"><div class="text_me"><p><b>Me:</b></p><p>'+text+'</p></div><div>');
-		var search = $('#chatbot_input').val();	
 		wait_reply(6).then(function(data) {			
-			write_reply(search);
+			write_reply(text);
 		});	
 	}
 	
@@ -110,8 +116,8 @@ function website(){
 		results.sort(function(a, b) {
 			return parseFloat(a.relevance) - parseFloat(b.relevance);
 		});
-		
-		if(results[results.length-1].relevance > 0.6){
+		//console.warn("answers", results);
+		if(results[results.length-1].relevance > 0.5){
 			myresult_title = results[results.length-1].title;
 			t = results[results.length-1].i;
 			myresult_answers = knowledgeBase[t][1];
@@ -119,7 +125,13 @@ function website(){
 			
 			//console.warn("myresult_answer", results, myresult_answers, myresult_answer);
 		} else {
+			errors++
 			myresult_answer = "I don't understand.";
+			if(errors == 1){
+				myresult_answer = "I don't understand.///If there is no typo then it's not in my knowledge base.///I'm sorry I'm still a very simple chatbot.";
+			} else if(errors == 2){
+				myresult_answer = "I STILL don't understand.///Maybe it's better to speak to Oana direcly.";
+			}
 		}
 		
 		return myresult_answer;
@@ -128,12 +140,13 @@ function website(){
 	function wait_reply(x){
 		return new Promise(function(resolve, reject){			
 			$('#chatbot_textarea').append('<div id="wait_container" class="text_chat"><div class="text_oana"><p><b>Oana:</b></p><p id="wait"></p></div></div>');
+			$("#chatbot_textarea").scrollTop($("#chatbot_textarea")[0].scrollHeight);
 			
 			var i = 0;
 			var j = 0;
 			var Wait = setInterval(function() {
 				i = ++i % 4;											
-				$("#wait").html("Wait"+Array(i+1).join("."));
+				$("#wait").html("Typing"+Array(i+1).join("."));
 				
 				j++	
 				if(j > x){
@@ -141,16 +154,16 @@ function website(){
 					$("#wait_container").remove();
 					resolve(true);
 				}
-			}, 500);
+			}, 300);
 		});	
 	}
 
-	function write_reply(search){
+	function write_reply(search, search_word){
 		return new Promise(function(resolve, reject){			
 			var chatbot_text = self.refreshSearch(search)
-			var text_list_found = chatbot_text.includes("//");
+			var text_list_found = chatbot_text.includes("///");
 			if(text_list_found){
-				var text_list = chatbot_text.split('//')
+				var text_list = chatbot_text.split('///')
 				for(var i in text_list){
 					if(i == 0){	
 						$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p><b>'+chatbot_name+':</b></p><p>'+text_list[i]+'</p></div><div>');	
@@ -159,15 +172,23 @@ function website(){
 					}					
 				}
 				check_special = text_list[text_list.length-1];
-			} else {						
-				$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p><b>'+chatbot_name+':</b></p><p>'+chatbot_text+'</p></div><div>');
+			} else {
+				if(typeof search_word != "undefined" && search_word != ""){	
+					var q = search_word.split(' ').join('+')
+					var google_search = "https://google.com/search?q="+q;
+					$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p><b>'+chatbot_name+':</b></p><p>'+chatbot_text+' <a target="_blank" href="'+google_search+'">'+q+'</a></p></div><div>');
+				} else {
+					$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p><b>'+chatbot_name+':</b></p><p>'+chatbot_text+'</p></div><div>');
+				}				
+				
 				check_special = chatbot_text;
-			}	
-			
-			$('#chatbot_input').val('');
+			}
+			$(".chatbot_input").prop('disabled', false);  
+			$("#chatbot_button").prop('disabled', false);	
+			$("#chatbot_textarea").scrollTop($("#chatbot_textarea")[0].scrollHeight);			
 
 			if(typeof check_special != "undefined"){
-				self.check_special_questions(check_special);
+				self.check_special_questions(check_special, search, search_word);
 			}			
 			
 			var objDiv = document.getElementById("chatbot_textarea");
@@ -177,7 +198,7 @@ function website(){
 		});
 	}
 
-	this.check_special_questions = function(question){
+	this.check_special_questions = function(question, search){
 		var trigger_found = false;
 		var trigger = "";
 		for(var i in trigger_data){
@@ -190,26 +211,48 @@ function website(){
 		}		
 		
 		if(trigger_found){
-			//console.log(question, trigger);
+			//console.log('qqq', question, trigger, search);
 			var chat_options = "";
 			switch (trigger) {
 				case "Would you like to know more about me and what I do?":
 					chat_options = "<div option='talk_overview_yes' class='chatbot_button_options'>Yes</div><div option='talk_overview_no' class='chatbot_button_options'>No</div>"
 					$(".chatbot_input").prop('disabled', true); 
 					$("#chatbot_button").prop('disabled', true); 
-					break;				
+					break;		
+				case "Would you like to contact me?":
+					chat_options = "<div option='talk_contact_yes' class='chatbot_button_options'>Yes</div><div option='talk_contact_no' class='chatbot_button_options'>No</div>"
+					$(".chatbot_input").prop('disabled', true); 
+					$("#chatbot_button").prop('disabled', true); 
+					break;	
+				case "Want me to search for you?":
+					var search_list_questions = ["what is a ", "what is the ", "what is ", "what are ", "what's ", "what's a ", "what're "]
+					var index_search = -1;
+					var a
+					for(var i in search_list_questions){
+						index_search = search.indexOf(search_list_questions[i]);
+						a = search_list_questions[i]
+						//console.log('qqq', index_search, a)
+						if(index_search != -1){
+							index_search = search_list_questions[i].length							
+							break;
+						}
+					}
+					
+					var obj_search = search.substring(index_search, search.length).replace(/[?=]/g, "");
+					//console.log('obj_search', index_search, obj_search, a);
+					chat_options = "<div option='talk_search_yes' class='chatbot_button_options' result='"+obj_search+"'>Yes</div><div option='talk_search_no' class='chatbot_button_options'>No</div>"
+					$(".chatbot_input").prop('disabled', true); 
+					$("#chatbot_button").prop('disabled', true); 
+					break;	
 			  }
 			$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p><b>'+chatbot_name+':</b></p><p>'+chat_options+'</p></div><div>');
+			$("#chatbot_textarea").scrollTop($("#chatbot_textarea")[0].scrollHeight);
 		} 
 	}
 	
 	function footer_time(){
 		var date = new Date();
-		date = date.getFullYear();
-		if(date == 2019 || date == '2019'){
-			$('#copyright_year').text(date);
-		} else{
-			$('#copyright_year').text('2019 - '+date);
-		}		
+		date = date.getFullYear();		
+		$('#copyright_year').text(date);
 	}
 }
