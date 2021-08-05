@@ -30,14 +30,18 @@ function website(){
 		})	
 
 		$('body').off('click', '.chatbot_button_options').on('click', '.chatbot_button_options', function () {
-			var option = $(this).attr('option').replace(/_/g, ' ')
-			var search_word = $(this).attr('result');			
-			//console.log('chatbot_button_options', option);
-			$(".chatbot_input").prop('disabled', false);  
-			$("#chatbot_button").prop('disabled', false); 
-			wait_reply(3).then(function(data) {			
-				write_reply(option, search_word);
-			});	
+			var ready = $(this).attr('ready');
+			if(ready == 'yes'){
+				var option = $(this).attr('option').replace(/_/g, ' ');			
+				var search_word = $(this).attr('result');	
+				$(".chatbot_input").prop('disabled', false);  
+				$("#chatbot_button").prop('disabled', false); 
+				$(this).parent().find('.talk_contact_yes').attr('ready', 'no');
+				$(this).parent().find('.talk_contact_no').attr('ready', 'no');
+				wait_reply(3).then(function(data) {			
+					write_reply(option, search_word);
+				});	
+			}
 		});
 	}
 	
@@ -52,7 +56,7 @@ function website(){
 	
 	function get_title_knowledgeBase(){		
 		for(var i in knowledgeBase){
-			titles.push(knowledgeBase[i][0][0]);
+			titles.push(knowledgeBase[i][0]);
 		}
 		return titles;
 	}
@@ -107,28 +111,27 @@ function website(){
 		var t = 0;
 		
 		for(var i in titles){
-			title = titles[i];
-			relevance = string_similarity(search, title);
-			obj = {title: title, relevance: relevance, i: i};
-			results.push(obj);
+			for(var j in titles[i]){
+				title = titles[i][j];			
+				relevance = string_similarity(search, title);
+				obj = {title: title, relevance: relevance, i: i};
+				results.push(obj);
+			}
 		}
 		
 		results.sort(function(a, b) {
 			return parseFloat(a.relevance) - parseFloat(b.relevance);
 		});
-		//console.warn("answers", results);
 		if(results[results.length-1].relevance > 0.5){
 			myresult_title = results[results.length-1].title;
 			t = results[results.length-1].i;
 			myresult_answers = knowledgeBase[t][1];
 			myresult_answer = myresult_answers[Math.floor(Math.random() * myresult_answers.length)];
-			
-			//console.warn("myresult_answer", results, myresult_answers, myresult_answer);
 		} else {
 			errors++
 			myresult_answer = "I don't understand.";
 			if(errors == 1){
-				myresult_answer = "I don't understand.///If there is no typo then it's not in my knowledge base.///I'm sorry I'm still a very simple chatbot.";
+				myresult_answer = "I don't understand.///If there is no typo then it's not in my knowledge base.///I'm sorry, I'm still a very simple chatbot.";
 			} else if(errors == 2){
 				myresult_answer = "I STILL don't understand.///Maybe it's better to speak to Oana direcly.";
 			}
@@ -203,7 +206,7 @@ function website(){
 		var trigger = "";
 		for(var i in trigger_data){
 			trigger_found = question.toLowerCase().includes(trigger_data[i].toLowerCase());
-			//console.log(question, question.toLowerCase(), trigger_data[i], trigger_found);
+			console.log(question);
 			if(trigger_found){
 				trigger = trigger_data[i];
 				break;
@@ -211,39 +214,19 @@ function website(){
 		}		
 		
 		if(trigger_found){
-			//console.log('qqq', question, trigger, search);
 			var chat_options = "";
+			$('.chatbot_button_options').attr('ready', 'no');
 			switch (trigger) {
 				case "Would you like to know more about me and what I do?":
-					chat_options = "<div option='talk_overview_yes' class='chatbot_button_options'>Yes</div><div option='talk_overview_no' class='chatbot_button_options'>No</div>"
+					chat_options = "<div ready='yes' option='talk_overview_yes' class='chatbot_button_options'>Yes</div><div ready='yes' option='talk_overview_no' class='chatbot_button_options'>No</div>"
 					$(".chatbot_input").prop('disabled', true); 
 					$("#chatbot_button").prop('disabled', true); 
 					break;		
 				case "Would you like to contact me?":
-					chat_options = "<div option='talk_contact_yes' class='chatbot_button_options'>Yes</div><div option='talk_contact_no' class='chatbot_button_options'>No</div>"
+					chat_options = "<div ready='yes' option='talk_contact_yes' class='chatbot_button_options'>Yes</div><div ready='yes' option='talk_contact_no' class='chatbot_button_options'>No</div>"
 					$(".chatbot_input").prop('disabled', true); 
 					$("#chatbot_button").prop('disabled', true); 
-					break;	
-				case "Want me to search for you?":
-					var search_list_questions = ["what is a ", "what is the ", "what is ", "what are ", "what's ", "what's a ", "what're "]
-					var index_search = -1;
-					var a
-					for(var i in search_list_questions){
-						index_search = search.indexOf(search_list_questions[i]);
-						a = search_list_questions[i]
-						//console.log('qqq', index_search, a)
-						if(index_search != -1){
-							index_search = search_list_questions[i].length							
-							break;
-						}
-					}
-					
-					var obj_search = search.substring(index_search, search.length).replace(/[?=]/g, "");
-					//console.log('obj_search', index_search, obj_search, a);
-					chat_options = "<div option='talk_search_yes' class='chatbot_button_options' result='"+obj_search+"'>Yes</div><div option='talk_search_no' class='chatbot_button_options'>No</div>"
-					$(".chatbot_input").prop('disabled', true); 
-					$("#chatbot_button").prop('disabled', true); 
-					break;	
+					break;
 			  }
 			$('#chatbot_textarea').append('<div class="text_chat"><div class="text_oana"><p><b>'+chatbot_name+':</b></p><p>'+chat_options+'</p></div><div>');
 			$("#chatbot_textarea").scrollTop($("#chatbot_textarea")[0].scrollHeight);
