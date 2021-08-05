@@ -150,16 +150,6 @@ a.chatbot_button, a.chatbot_button:hover, a.chatbot_button:focus{
     float: right!important;
 }
 
-footer{
-	color:#123043;
-	position:absolute;
-	z-index:9999;
-	bottom:0px;
-	left:0px;
-	right:0px;
-	padding:10px 0px;
-}
-
 a, a:hover, a:focus{
 	color:#123043;
 }
@@ -178,4 +168,18 @@ a, a:hover, a:focus{
     background-color: darkgrey;
     outline: 1px solid slategrey;
     border-radius: 50px;
+}
+
+/*---------------------footer---------------------*/
+footer{
+	color:#123043;
+	position:absolute;
+	z-index:9999;
+	bottom:0px;
+	left:0px;
+	right:0px;
+	padding:10px 0px;
+}
+footer ~ div {
+    visibility: hidden;
 }
